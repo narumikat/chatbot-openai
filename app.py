@@ -1,4 +1,3 @@
-import openai
 from flask import Flask
 from google.oauth2 import service_account
 from google.cloud import speech_v1p1beta1 as speech
