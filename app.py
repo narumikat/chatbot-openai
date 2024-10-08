@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, render_template, jsonify
 from dotenv import load_dotenv
 from google.oauth2 import service_account
 from google.cloud import speech_v1p1beta1 as speech
@@ -8,18 +8,17 @@ import wave
 import os
 
 load_dotenv()
-client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
-
-# Inicialize o cliente OpenAI e Flask
 app = Flask(__name__)
 
-# Carregue suas credenciais de serviço
+# CREDENTIALS
+client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
 client_file = os.getenv('GOOGLE_CREDENTIALS_PATH')
 credentials = service_account.Credentials.from_service_account_file(client_file)
 speech_client = speech.SpeechClient(credentials=credentials)
 
+
 # Função para capturar áudio do microfone e salvar como .wav temporário
-def record_audio(filename="input_audio.wav", record_seconds=5):
+def record_audio(filename="input_audio.wav", record_seconds=4):
     chunk = 1024  # Tamanho do bloco
     sample_format = pyaudio.paInt16  # Formato do áudio
     channels = 1  # Canal mono
@@ -55,6 +54,7 @@ def record_audio(filename="input_audio.wav", record_seconds=5):
     wf.writeframes(b''.join(frames))
     wf.close()
 
+
 # Função para enviar o áudio para o Google Cloud Speech API e realizar a transcrição
 def transcribe_audio(file_path):
     try:
@@ -84,32 +84,32 @@ def get_chatgpt_response(transcription):
         print("Transcrição inválida. Verifique o arquivo de áudio.")
         return None
 
-    try:
-        # Faz a chamada para obter a resposta
-        response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "user", "content": transcription}
-            ],
-            max_tokens=50  # Ajuste conforme necessário
-        )
-        # Extrai o conteúdo da resposta corretamente
-        response_content = response.choices[0].message.content
-        return response_content
-    except Exception as e:
-        print(f"Erro ao obter resposta do ChatGPT: {e}")
-        return None
+    response = client.chat.completions.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {"role": "user", "content": transcription}
+        ],
+        max_tokens=50
+    )
+    # Extrai o conteúdo da resposta corretamente
+    response_content = response.choices[0].message.content
+    return response_content
 
 
+@app.route('/')
+def chat():
+    return render_template('chat.html')
 
-# Exemplo de uso
-# Capturar áudio do microfone (aqui por 5 segundos)
-record_audio(record_seconds=5)
 
-# Transcrever o áudio gravado
-transcription = transcribe_audio('input_audio.wav')
-print(f"Transcrição obtida: {transcription}")
+@app.route('/send', methods=['POST'])
+def send():
+    record_audio(record_seconds=4)
+    transcription = transcribe_audio('input_audio.wav')
+    print(f"Transcrição obtida: {transcription}")
+    chatgpt_response = get_chatgpt_response(transcription)
+    print("Resposta do ChatGPT:", chatgpt_response)
 
-# Obter a resposta do ChatGPT com a transcrição
-chatgpt_response = get_chatgpt_response(transcription)
-print("Resposta do ChatGPT:", chatgpt_response)
+    return jsonify({
+        "transcription": transcription,
+        "chatgpt_response": chatgpt_response
+    })
