@@ -16,8 +16,9 @@ client_file = os.getenv('GOOGLE_CREDENTIALS_PATH')
 credentials = service_account.Credentials.from_service_account_file(client_file)
 speech_client = speech.SpeechClient(credentials=credentials)
 
+
 # Função para capturar áudio do microfone e salvar como .wav temporário
-def record_audio(filename="input_audio.wav", record_seconds=5):
+def record_audio(filename="input_audio.wav", record_seconds=4):
     chunk = 1024  # Tamanho do bloco
     sample_format = pyaudio.paInt16  # Formato do áudio
     channels = 1  # Canal mono
@@ -52,6 +53,7 @@ def record_audio(filename="input_audio.wav", record_seconds=5):
     wf.setframerate(fs)
     wf.writeframes(b''.join(frames))
     wf.close()
+
 
 # Função para enviar o áudio para o Google Cloud Speech API e realizar a transcrição
 def transcribe_audio(file_path):
@@ -93,13 +95,15 @@ def get_chatgpt_response(transcription):
     response_content = response.choices[0].message.content
     return response_content
 
+
 @app.route('/')
 def chat():
     return render_template('chat.html')
 
+
 @app.route('/send', methods=['POST'])
 def send():
-    record_audio(record_seconds=5)
+    record_audio(record_seconds=4)
     transcription = transcribe_audio('input_audio.wav')
     print(f"Transcrição obtida: {transcription}")
     chatgpt_response = get_chatgpt_response(transcription)
