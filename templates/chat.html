@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatGPT com Áudio</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <h1>ChatGPT via Áudio</h1>
+    <button id="record-btn">Gravar Áudio</button>
+    <p id="status">Aguardando gravação...</p>
+
+    <h2>Transcrição:</h2>
+    <p id="transcription"></p>
+
+    <h2>Resposta do ChatGPT:</h2>
+    <p id="response"></p>
+
+    <script>
+        $('#record-btn').click(function() {
+            $('#status').text('Gravando áudio...');
+            $.ajax({
+                url: '/send',
+                type: 'POST',
+                success: function(data) {
+                    $('#status').text('Gravação concluída!');
+                    $('#transcription').text(data.transcription);
+                    $('#response').text(data.chatgpt_response);
+                },
+                error: function() {
+                    $('#status').text('Erro ao gravar áudio');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
