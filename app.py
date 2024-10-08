@@ -1,6 +1,4 @@
-import time
-
-from flask import Flask, render_template, request, jsonify, url_for
+from flask import Flask, render_template, jsonify, url_for
 from dotenv import load_dotenv
 from google.oauth2 import service_account
 from google.cloud import speech_v1p1beta1 as speech
@@ -27,19 +25,18 @@ MAX_AUDIO_FILES = 3
 
 def cleanup_audio_files():
     # Obtém todos os arquivos de áudio no diretório
-    audio_files = glob.glob(os.path.join(AUDIO_DIR, '*.mp3'))  # Altere a extensão conforme necessário
-    audio_files.sort(key=os.path.getmtime)  # Ordena os arquivos pela data de modificação
+    audio_files = glob.glob(os.path.join(AUDIO_DIR, '*.mp3'))
+    audio_files.sort(key=os.path.getmtime)
 
-    # Se o número de arquivos de áudio exceder o máximo permitido
     if len(audio_files) > MAX_AUDIO_FILES:
         # Deleta os arquivos mais antigos
         for file in audio_files[:len(audio_files) - MAX_AUDIO_FILES]:
-            os.remove(file)  # Remove o arquivo
-            print(f"Arquivo deletado: {file}")
+            os.remove(file)
+            print(f"Deleted file: {file}")
 
 
 # Função para capturar áudio do microfone e salvar como .wav temporário
-def record_audio(filename="input_audio.wav", record_seconds=4):
+def record_audio(filename="input_audio.wav", record_seconds=5):
     chunk = 1024  # Tamanho do bloco
     sample_format = pyaudio.paInt16  # Formato do áudio
     channels = 1  # Canal mono
@@ -74,39 +71,30 @@ def record_audio(filename="input_audio.wav", record_seconds=4):
 
 # Função para enviar o áudio para o Google Cloud Speech API e realizar a transcrição
 def transcribe_audio(file_path):
-    try:
-        with open(file_path, "rb") as audio_file:
-            content = audio_file.read()
+    with open(file_path, "rb") as audio_file:
+        content = audio_file.read()
 
-        audio = speech.RecognitionAudio(content=content)
-        config = speech.RecognitionConfig(
-            encoding=speech.RecognitionConfig.AudioEncoding.LINEAR16,
-            sample_rate_hertz=16000,
-            language_code="pt-BR",
-        )
+    audio = speech.RecognitionAudio(content=content)
+    config = speech.RecognitionConfig(
+        encoding=speech.RecognitionConfig.AudioEncoding.LINEAR16,
+        sample_rate_hertz=16000,
+        language_code="pt-BR",
+    )
 
-        response = speech_client.recognize(config=config, audio=audio)
+    response = speech_client.recognize(config=config, audio=audio)
 
-        # Juntando todas as transcrições (se houver mais de uma)
-        transcription = ' '.join([result.alternatives[0].transcript for result in response.results])
-        return transcription
-
-    except Exception as e:
-        print(f"Erro ao transcrever o áudio: {e}")
-        return None
+    # Juntando todas as transcrições (se houver mais de uma)
+    transcription = ' '.join([result.alternatives[0].transcript for result in response.results])
+    return transcription
 
 
 def get_chatgpt_response(transcription):
-    if not transcription:
-        print("Transcrição inválida. Verifique o arquivo de áudio.")
-        return None
-
     response = client.chat.completions.create(
         model="gpt-3.5-turbo",
         messages=[
             {"role": "user", "content": transcription}
         ],
-        max_tokens=50
+        max_tokens=100
     )
     # Extrai o conteúdo da resposta corretamente
     response_content = response.choices[0].message.content
@@ -115,12 +103,9 @@ def get_chatgpt_response(transcription):
 
 def speak(text):
     filename = f'static/audio/response_{int(time.time())}.mp3'  # Gera um nome de arquivo único
-    try:
-        tts = gTTS(text=text, lang='pt-br')
-        tts.save(filename)  # Gera e salva o áudio
-        print(f"Áudio salvo em: {filename}")
-    except Exception as e:
-        print(f"Erro ao gerar áudio: {e}")
+    tts = gTTS(text=text, lang='pt-br')
+    tts.save(filename)
+    print(f"Áudio salvo em: {filename}")
     return filename
 
 
@@ -131,7 +116,7 @@ def chat():
 
 @app.route('/send', methods=['POST'])
 def send():
-    record_audio(record_seconds=4)
+    record_audio(record_seconds=5)
     transcription = transcribe_audio('input_audio.wav')
 
     if transcription:

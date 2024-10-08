@@ -21,21 +21,17 @@
                 <p>Hello <br> I'm ChatGPT, how can I help you?</p>
             </div>
         </div>
-        <div id="chat-history"></div> <!-- Área de histórico de mensagens -->
-        {#        <audio id="audio-response" src="{{ url_for('static', filename='response.mp3') }}" preload="auto"></audio>#}
+        <div id="chat-history"></div>
         <div id="audio-container" class="d-none">
             <audio id="audio-response" src="{{ url_for('static', filename='audio/response.mp3') }}"
                    preload="auto"></audio>
         </div>
-
-
     </div>
     <div class="send-msg rounded-pill">
         <small id="status">Say something...</small>
         <button id="record-btn"><i class="fa-solid fa-microphone"></i></button>
     </div>
 </section>
-
 <script>
     const userPhotoUrl = "{{ url_for('static', filename='images/user-photo.png') }}";
     const chatGptLogoUrl = "{{ url_for('static', filename='images/chatgpt-logo.png') }}";

@@ -31,7 +31,7 @@ body {
     align-items: center;
     background-color: #efefef;
     padding: 20px 30px;
-    box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
     z-index: 2000;
 }
 
@@ -51,6 +51,7 @@ button {
     margin-bottom: 0.5rem;
     max-width: 80%;
     color: #2e2f31;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
 .user-msg {
@@ -60,11 +61,17 @@ button {
     color: #fff;
     margin-bottom: 0.5rem;
     max-width: 80%;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
 .fa-microphone {
-    color: #506ffd;
+    color: #607cfd;
     font-size: 1.5rem;
+    transition: color 0.3s;
+}
+
+.fa-microphone:hover {
+    color: #738cfd;
 }
 
 small {
