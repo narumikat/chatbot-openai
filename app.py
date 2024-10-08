@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, jsonify
 from dotenv import load_dotenv
 from google.oauth2 import service_account
 from google.cloud import speech_v1p1beta1 as speech
@@ -8,10 +8,10 @@ import wave
 import os
 
 load_dotenv()
-client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
 app = Flask(__name__)
 
-# Carregue suas credenciais de serviço
+# CREDENTIALS
+client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
 client_file = os.getenv('GOOGLE_CREDENTIALS_PATH')
 credentials = service_account.Credentials.from_service_account_file(client_file)
 speech_client = speech.SpeechClient(credentials=credentials)
