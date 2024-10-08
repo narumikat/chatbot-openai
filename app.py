@@ -1,11 +1,16 @@
-from flask import Flask, render_template, jsonify
+import time
+
+from flask import Flask, render_template, request, jsonify, url_for
 from dotenv import load_dotenv
 from google.oauth2 import service_account
 from google.cloud import speech_v1p1beta1 as speech
 from openai import OpenAI
+from gtts import gTTS
 import pyaudio
 import wave
 import os
+import time
+import glob
 
 load_dotenv()
 app = Flask(__name__)
@@ -16,6 +21,22 @@ client_file = os.getenv('GOOGLE_CREDENTIALS_PATH')
 credentials = service_account.Credentials.from_service_account_file(client_file)
 speech_client = speech.SpeechClient(credentials=credentials)
 
+AUDIO_DIR = 'static/audio/'
+MAX_AUDIO_FILES = 3
+
+
+def cleanup_audio_files():
+    # Obtém todos os arquivos de áudio no diretório
+    audio_files = glob.glob(os.path.join(AUDIO_DIR, '*.mp3'))  # Altere a extensão conforme necessário
+    audio_files.sort(key=os.path.getmtime)  # Ordena os arquivos pela data de modificação
+
+    # Se o número de arquivos de áudio exceder o máximo permitido
+    if len(audio_files) > MAX_AUDIO_FILES:
+        # Deleta os arquivos mais antigos
+        for file in audio_files[:len(audio_files) - MAX_AUDIO_FILES]:
+            os.remove(file)  # Remove o arquivo
+            print(f"Arquivo deletado: {file}")
+
 
 # Função para capturar áudio do microfone e salvar como .wav temporário
 def record_audio(filename="input_audio.wav", record_seconds=4):
@@ -24,8 +45,6 @@ def record_audio(filename="input_audio.wav", record_seconds=4):
     channels = 1  # Canal mono
     fs = 16000  # Taxa de amostragem em Hertz (16kHz)
     p = pyaudio.PyAudio()  # Inicializa o PyAudio
-
-    print("Gravando...")
 
     stream = p.open(format=sample_format,
                     channels=channels,
@@ -43,8 +62,6 @@ def record_audio(filename="input_audio.wav", record_seconds=4):
     stream.stop_stream()
     stream.close()
     p.terminate()
-
-    print("Gravação finalizada!")
 
     # Salvar o áudio capturado em um arquivo WAV
     wf = wave.open(filename, 'wb')
@@ -96,6 +113,17 @@ def get_chatgpt_response(transcription):
     return response_content
 
 
+def speak(text):
+    filename = f'static/audio/response_{int(time.time())}.mp3'  # Gera um nome de arquivo único
+    try:
+        tts = gTTS(text=text, lang='pt-br')
+        tts.save(filename)  # Gera e salva o áudio
+        print(f"Áudio salvo em: {filename}")
+    except Exception as e:
+        print(f"Erro ao gerar áudio: {e}")
+    return filename
+
+
 @app.route('/')
 def chat():
     return render_template('chat.html')
@@ -105,11 +133,17 @@ def chat():
 def send():
     record_audio(record_seconds=4)
     transcription = transcribe_audio('input_audio.wav')
-    print(f"Transcrição obtida: {transcription}")
-    chatgpt_response = get_chatgpt_response(transcription)
-    print("Resposta do ChatGPT:", chatgpt_response)
 
-    return jsonify({
-        "transcription": transcription,
-        "chatgpt_response": chatgpt_response
-    })
+    if transcription:
+        chatgpt_response = get_chatgpt_response(transcription)
+        print("Resposta do ChatGPT:", chatgpt_response)
+
+        # Gera o áudio a partir da resposta
+        audio_file = speak(chatgpt_response)  # Recebe o novo nome do arquivo de áudio
+        cleanup_audio_files()
+
+        return jsonify({
+            "transcription": transcription,
+            "chatgpt_response": chatgpt_response,
+            "audio_file": url_for('static', filename='audio/' + audio_file.split('/')[-1])
+        })
