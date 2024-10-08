@@ -1,21 +1,22 @@
 from flask import Flask
+from dotenv import load_dotenv
 from google.oauth2 import service_account
 from google.cloud import speech_v1p1beta1 as speech
+from openai import OpenAI
 import pyaudio
 import wave
+import os
 
-from openai import OpenAI
-
-# openai.api_key = "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"
-client = OpenAI(api_key="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")
+load_dotenv()
+client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
 
 # Inicialize o cliente OpenAI e Flask
 app = Flask(__name__)
 
 # Carregue suas credenciais de serviço
-client_file = 'service_account_chatbot.json'  # Adicione o caminho para o arquivo JSON de serviço
+client_file = os.getenv('GOOGLE_CREDENTIALS_PATH')
 credentials = service_account.Credentials.from_service_account_file(client_file)
-speech_client = speech.SpeechClient(credentials=credentials)  # Cliente do Google Cloud Speech
+speech_client = speech.SpeechClient(credentials=credentials)
 
 # Função para capturar áudio do microfone e salvar como .wav temporário
 def record_audio(filename="input_audio.wav", record_seconds=5):
