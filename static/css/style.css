@@ -1,0 +1,82 @@
+body {
+    min-height: 100vh;
+    background-image: linear-gradient(45deg, #8aa2f9, #b8c5f4);
+    background-repeat: no-repeat;
+    display: flex;
+    align-items: center;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
+
+.chat-box {
+    width: 80%;
+    /*height: fit-content;*/
+    max-height: 400px;
+    padding-bottom: 100px;
+    overflow-y: auto
+}
+
+.send-msg {
+    position: absolute;
+    bottom: -100px;
+    left: 50%;
+    transform: translate(-50%);
+    width: 80%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #efefef;
+    padding: 20px 30px;
+    box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+    z-index: 2000;
+}
+
+button {
+    background: none;
+    border: none;
+}
+
+.chat-box p {
+    font-weight: 600;
+}
+
+.chatgpt-msg {
+    background-color: #efefef;
+    padding: 20px;
+    border-radius: 24px;
+    margin-bottom: 0.5rem;
+    max-width: 80%;
+    color: #2e2f31;
+}
+
+.user-msg {
+    background-color: #2e2f31;
+    padding: 20px;
+    border-radius: 24px;
+    color: #fff;
+    margin-bottom: 0.5rem;
+    max-width: 80%;
+}
+
+.fa-microphone {
+    color: #506ffd;
+    font-size: 1.5rem;
+}
+
+small {
+    color: #696977;
+}
+
+.avatar {
+    width: 60px;
+    height: 60px;
+    background-color: #abbaef;
+    border-radius: 50%;
+    padding: 5px;
+}
