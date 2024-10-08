@@ -7,6 +7,10 @@ $(document).ready(function () {
             success: function (data) {
                 $('#status').text('Recording completed!');
 
+                setTimeout(function () {
+                    $('#status').text('Record new audio');
+                }, 3000);
+
                 // Adiciona a mensagem do usuário
                 $('#chat-history').append(`
                     <div class="d-flex align-items-center justify-content-end">
@@ -27,12 +31,14 @@ $(document).ready(function () {
                     </div>
                 `);
 
-                // Rolando para o final do histórico de mensagens
+                const audioElement = document.getElementById('audio-response');
+                audioElement.src = data.audio_file; // Atualiza para o novo arquivo de áudio
+                audioElement.load(); // Carrega o novo src
+                audioElement.playbackRate = 1.8;
+                audioElement.play(); // Toca o áudio
+
                 $('#chat-history').animate({scrollTop: $('#chat-history')[0].scrollHeight}, 500);
             },
-            error: function () {
-                $('#status').text('Erro ao gravar áudio');
-            }
         });
     });
 });
