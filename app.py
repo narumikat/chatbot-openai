@@ -13,63 +13,44 @@ import glob
 load_dotenv()
 app = Flask(__name__)
 
-# CREDENTIALS
+# Credentials
 client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
-client_file = os.getenv('GOOGLE_CREDENTIALS_PATH')
-credentials = service_account.Credentials.from_service_account_file(client_file)
+credentials = service_account.Credentials.from_service_account_file(os.getenv('GOOGLE_CREDENTIALS_PATH'))
 speech_client = speech.SpeechClient(credentials=credentials)
 
 AUDIO_DIR = 'static/audio/'
 MAX_AUDIO_FILES = 3
 
 
+# Clean old sound files
 def cleanup_audio_files():
-    # Obtém todos os arquivos de áudio no diretório
-    audio_files = glob.glob(os.path.join(AUDIO_DIR, '*.mp3'))
-    audio_files.sort(key=os.path.getmtime)
+    audio_files = sorted(glob.glob(os.path.join(AUDIO_DIR, '*.mp3')), key=os.path.getmtime)
 
     if len(audio_files) > MAX_AUDIO_FILES:
-        # Deleta os arquivos mais antigos
         for file in audio_files[:len(audio_files) - MAX_AUDIO_FILES]:
             os.remove(file)
-            print(f"Deleted file: {file}")
+            print(f"Arquivo deletado: {file}")
 
 
-# Função para capturar áudio do microfone e salvar como .wav temporário
+# Record audio and save as a WAV file
 def record_audio(filename="input_audio.wav", record_seconds=5):
-    chunk = 1024  # Tamanho do bloco
-    sample_format = pyaudio.paInt16  # Formato do áudio
-    channels = 1  # Canal mono
-    fs = 16000  # Taxa de amostragem em Hertz (16kHz)
-    p = pyaudio.PyAudio()  # Inicializa o PyAudio
+    p = pyaudio.PyAudio()
+    stream = p.open(format=pyaudio.paInt16, channels=1, rate=16000, frames_per_buffer=1024, input=True)
 
-    stream = p.open(format=sample_format,
-                    channels=channels,
-                    rate=fs,
-                    frames_per_buffer=chunk,
-                    input=True)
+    frames = [stream.read(1024) for _ in range(0, int(16000 / 1024 * record_seconds))]
 
-    frames = []
-
-    for _ in range(0, int(fs / chunk * record_seconds)):
-        data = stream.read(chunk)
-        frames.append(data)
-
-    # Parar e fechar o stream
     stream.stop_stream()
     stream.close()
     p.terminate()
 
-    # Salvar o áudio capturado em um arquivo WAV
-    wf = wave.open(filename, 'wb')
-    wf.setnchannels(channels)
-    wf.setsampwidth(p.get_sample_size(sample_format))
-    wf.setframerate(fs)
-    wf.writeframes(b''.join(frames))
-    wf.close()
+    with wave.open(filename, 'wb') as wf:
+        wf.setnchannels(1)
+        wf.setsampwidth(p.get_sample_size(pyaudio.paInt16))
+        wf.setframerate(16000)
+        wf.writeframes(b''.join(frames))
 
 
-# Função para enviar o áudio para o Google Cloud Speech API e realizar a transcrição
+# Transcribe audio using Google Cloud Speech API
 def transcribe_audio(file_path):
     with open(file_path, "rb") as audio_file:
         content = audio_file.read()
@@ -78,42 +59,40 @@ def transcribe_audio(file_path):
     config = speech.RecognitionConfig(
         encoding=speech.RecognitionConfig.AudioEncoding.LINEAR16,
         sample_rate_hertz=16000,
-        language_code="pt-BR",
+        language_code="en-US"
     )
 
     response = speech_client.recognize(config=config, audio=audio)
-
-    # Juntando todas as transcrições (se houver mais de uma)
     transcription = ' '.join([result.alternatives[0].transcript for result in response.results])
+
     return transcription
 
 
+# Get ChatGPT answer
 def get_chatgpt_response(transcription):
     response = client.chat.completions.create(
         model="gpt-3.5-turbo",
-        messages=[
-            {"role": "user", "content": transcription}
-        ],
+        messages=[{"role": "user", "content": transcription}],
         max_tokens=100
     )
-    # Extrai o conteúdo da resposta corretamente
-    response_content = response.choices[0].message.content
-    return response_content
+    return response.choices[0].message.content
 
 
+# Generate audio with gTTS
 def speak(text):
-    filename = f'static/audio/response_{int(time.time())}.mp3'  # Gera um nome de arquivo único
-    tts = gTTS(text=text, lang='pt-br')
-    tts.save(filename)
-    print(f"Áudio salvo em: {filename}")
+    filename = f'static/audio/response_{int(time.time())}.mp3'
+    gTTS(text=text, lang='en').save(filename)
+    print(f"Audio saved as: {filename}")
     return filename
 
 
+# Root route
 @app.route('/')
 def chat():
     return render_template('chat.html')
 
 
+# Process send audio and answers from GPT
 @app.route('/send', methods=['POST'])
 def send():
     record_audio(record_seconds=5)
@@ -121,14 +100,17 @@ def send():
 
     if transcription:
         chatgpt_response = get_chatgpt_response(transcription)
-        print("Resposta do ChatGPT:", chatgpt_response)
+        print("ChatGPT answer:", chatgpt_response)
 
-        # Gera o áudio a partir da resposta
-        audio_file = speak(chatgpt_response)  # Recebe o novo nome do arquivo de áudio
+        audio_file = speak(chatgpt_response)
         cleanup_audio_files()
 
         return jsonify({
             "transcription": transcription,
             "chatgpt_response": chatgpt_response,
-            "audio_file": url_for('static', filename='audio/' + audio_file.split('/')[-1])
+            "audio_file": url_for('static', filename='audio/' + os.path.basename(audio_file))
         })
+
+
+if __name__ == '__main__':
+    app.run(debug=True)

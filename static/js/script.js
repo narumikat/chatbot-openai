@@ -11,7 +11,7 @@ $(document).ready(function () {
                     $('#status').text('Record new audio');
                 }, 3000);
 
-                // Adiciona a mensagem do usuário
+                // Add user message
                 $('#chat-history').append(`
                     <div class="d-flex align-items-center justify-content-end">
                         <div class="user-msg">
@@ -21,7 +21,7 @@ $(document).ready(function () {
                     </div>
                 `);
 
-                // Adiciona a resposta do ChatGPT
+                // Add ChatGPT answer
                 $('#chat-history').append(`
                     <div class="d-flex align-items-center justify-content-start">
                         <img src="${chatGptLogoUrl}" alt="Avatar" class="avatar me-2">
@@ -32,10 +32,10 @@ $(document).ready(function () {
                 `);
 
                 const audioElement = document.getElementById('audio-response');
-                audioElement.src = data.audio_file; // Atualiza para o novo arquivo de áudio
-                audioElement.load(); // Carrega o novo src
+                audioElement.src = data.audio_file; // Update to new audio file
+                audioElement.load();
                 audioElement.playbackRate = 1.8;
-                audioElement.play(); // Toca o áudio
+                audioElement.play();
 
                 $('#chat-history').animate({scrollTop: $('#chat-history')[0].scrollHeight}, 500);
             },
