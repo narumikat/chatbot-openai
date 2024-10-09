@@ -4,6 +4,12 @@ This repository contains a chatbot built using the OpenAI API, with integrated a
 via the Google Cloud Speech API. It allows users to capture audio, transcribe it into text, and then generate automatic
 responses.
 
+## Demo
+
+Watch the demonstration of the Chatbot here:
+
+[![Watch the Demo](https://img.youtube.com/vi/q2_NwTfCx24/0.jpg)](https://www.youtube.com/watch?v=q2_NwTfCx24)
+
 ### Features:
 
 #### Audio Capture:
@@ -23,7 +29,7 @@ responses.
 - Converts the GPT-generated responses into speech using Google Text-to-Speech (gTTS), allowing users to hear the
   chatbot’s reply.
 
-####                                                       * Flask Integration
+####                                                             * Flask Integration
 
 #### Libraries:
 
@@ -56,7 +62,8 @@ To boost performance, especially when handling multiple requests, you can use **
 
 - Handling API calls in the background to improve responsiveness
 - Enhancing scalability
-- When combined with AJAX, it offers a smoother user experience by providing real-time updates.
+- Increasing **response speed**.
+- Combined with AJAX, it offers a smoother user experience by providing real-time updates.
 
 ## Instalation
 
