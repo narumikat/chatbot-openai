@@ -29,16 +29,12 @@ Watch the demonstration of the Chatbot here:
 - Converts the GPT-generated responses into speech using Google Text-to-Speech (gTTS), allowing users to hear the
   chatbot’s reply.
 
-####                                                             * Flask Integration
+####                                                              * Flask Integration
 
 #### Libraries:
 
 - **openai**
 - **google-cloud-speech**
-- **Flask**
-- **pyaudio**
-- **wave**
-- **glob**
 
 #### Credential Requirements:
 
@@ -50,13 +46,15 @@ Watch the demonstration of the Chatbot here:
 In this project, AJAX is used to create a seamless real-time chat experience. The chat is updated dynamically as
 messages are exchanged between the user and the bot, without requiring the page to reload.
 
-### DB Implementations
+## TODO  as improvements:
+
+### • DB Implementations
 
 Consider adding a database to store user conversations for
 tracking history, user progress, and analytics. Storing interactions could enable personalized responses and suggestions
 based on previous chats.
 
-### Improving Performance with Celery (Optional)
+### • Improving Performance with Celery (Optional)
 
 To boost performance, especially when handling multiple requests, you can use **Celery** for background jobs.
 
