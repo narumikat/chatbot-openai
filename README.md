@@ -29,7 +29,7 @@ Watch the demonstration of the Chatbot here:
 - Converts the GPT-generated responses into speech using Google Text-to-Speech (gTTS), allowing users to hear the
   chatbot’s reply.
 
-####                                                              * Flask Integration
+####                                                               * Flask Integration
 
 #### Libraries:
 
@@ -74,9 +74,7 @@ git clone https://github.com/your-username/chatbot-openai.git
 2. Install the dependencies:
 
 ```bash
-pip
-install - r
-requirements.txt
+pip install - r requirements.txt
 ```
 
 3. Set up credentials:
